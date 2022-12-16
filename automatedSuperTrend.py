@@ -17,14 +17,23 @@ mt5.initialize(login=51054165,
    password="ywa8FtEY",      
    server="ICMarketsSC-Demo")
 #Making Market Order
-def makingOrder(volume,orderType):
+def makingOrder(volume,orderType,checkData):
+    lastRow = len(checkData.index) - 1
+    prevRow = lastRow - 1
+   
     if orderType == 'Buy':
+        if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
+            SL = checkData['lowerBand'][lastRow] - 0.0001
+            TP = checkData['close'][lastRow] - SL 
+            TP = 1.5 * TP
+            TP = checkData['close'][lastRow] + TP
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": 'EURUSD',
             "volume": volume,
             "type": mt5.ORDER_TYPE_BUY,
             "price": mt5.symbol_info_tick('EURUSD').ask,
+            'tp' : TP,
             "magic": MAGIC,
             "comment": "Started Position",
             "type_time": mt5.ORDER_TIME_GTC,
@@ -33,12 +42,18 @@ def makingOrder(volume,orderType):
         result = mt5.order_send(request)
         print(result)
     else:
+        if (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
+            SL = checkData['upperBand'][lastRow] + 0.0001
+            TP = SL - checkData['close'][lastRow]
+            TP = 1.5 * TP
+            TP = checkData['close'][lastRow] - TP
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": 'EURUSD',
             "volume": volume,
             "type": mt5.ORDER_TYPE_SELL,
             "price": mt5.symbol_info_tick('EURUSD').bid,
+            'tp' : TP,
             "magic": MAGIC,
             "comment": "Started Position",
             "type_time": mt5.ORDER_TIME_GTC,
@@ -84,22 +99,16 @@ def trail_sl(checkData):
     print(checkData.tail(2))
     #for Buy/emaBuy
     if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
-        SL = checkData['lowerBand'][lastRow] - 0.0001
-        TP = checkData['close'][lastRow] - SL 
-        TP = 1.5 * TP
-        TP = checkData['close'][lastRow] + TP
+        SL = checkData['lowerBand'][lastRow] - 0.0005
         #setting SL above 5 pips of UpperBand for Sell Signal/emaSell
     elif (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
-        SL = checkData['upperBand'][lastRow] + 0.0001
-        TP = SL - checkData['close'][lastRow]
-        TP = 1.5 * TP
-        TP = checkData['close'][lastRow] - TP
+        SL = checkData['upperBand'][lastRow] + 0.0005
 
     request = {
             'action': mt5.TRADE_ACTION_SLTP,
             'position': position.ticket,
             'sl': SL,
-            'tp' : TP
+            'tp' : position.tp
         }
     result = mt5.order_send(request)
     print(result)
