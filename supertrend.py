@@ -88,7 +88,7 @@ def ATR(df,period=10):
 # fig = px.line(df,x='time',y=['close','upperBand','lowerBand'])
 # fig.show()
 
-def getSuperTrend(df,period=10,multiplier=3):
+def getSuperTrend(df,period=10,multiplier=1.5):
     
     
     #populating ATR and making Bands

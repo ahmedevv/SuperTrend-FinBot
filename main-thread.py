@@ -24,11 +24,11 @@ while True: # your main thread
         if checker == False:
             if orderType == 'Buy':
                 print("Opening Buy Position")
-                automatedSuperTrend.makingOrder(1.0,'Buy')
+                automatedSuperTrend.makingOrder(1.0,'Buy',superTrend_data)
                 automatedSuperTrend.trail_sl(superTrend_data)
             elif orderType == 'Sell':
                 print("Opening Sell Position")
-                automatedSuperTrend.makingOrder(1.0,'Sell')
+                automatedSuperTrend.makingOrder(1.0,'Sell',superTrend_data)
                 automatedSuperTrend.trail_sl(superTrend_data)
             else:
                 print("No Signal Found!")
