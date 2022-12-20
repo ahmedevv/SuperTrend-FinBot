@@ -5,7 +5,7 @@ import MetaTrader5 as mt5
 tradingTimeFrame = 15 # set your trading time frame aka the time when new candle forms
 executedCode = False # an indication whether you have executed your code or not
 import automatedSuperTrend
-SYMBOL = 'EURUSD'
+SYMBOL = 'XAUUSD'
 TIMEFRAME = mt5.TIMEFRAME_M15
 
 while True: # your main thread

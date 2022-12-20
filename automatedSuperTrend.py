@@ -1,14 +1,16 @@
 import pandas as pd
 import MetaTrader5 as mt5
+import numpy as np
 from supertrend import getSuperTrend
 from supertrend import generateSignal
+import math
 #from supertrenBacktest import Strategy
 import time
 from datetime import datetime, timedelta
 
 
 #setting Variables
-SYMBOL = 'EURUSD'
+SYMBOL = 'XAUUSD'
 TIMEFRAME = mt5.TIMEFRAME_M15
 deviation = 20
 MAGIC = 999
@@ -23,16 +25,22 @@ def makingOrder(volume,orderType,checkData):
    
     if orderType == 'Buy':
         if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
-            SL = checkData['lowerBand'][lastRow] - 0.0001
-            TP = checkData['close'][lastRow] - SL 
-            TP = 1.5 * TP
-            TP = checkData['close'][lastRow] + TP
+            if(math.isnan(checkData['lowerBand'][lastRow])):
+                SL = checkData['low'][prevRow] - 0.0005
+                TP = checkData['close'][lastRow] - SL 
+                TP = 1.3 * TP
+                TP = checkData['close'][lastRow] + TP
+            else:
+                SL = checkData['lowerBand'][lastRow] - 0.0005
+                TP = checkData['close'][lastRow] - SL 
+                TP = 1.3 * TP
+                TP = checkData['close'][lastRow] + TP
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": 'EURUSD',
+            "symbol": 'XAUUSD',
             "volume": volume,
             "type": mt5.ORDER_TYPE_BUY,
-            "price": mt5.symbol_info_tick('EURUSD').ask,
+            "price": mt5.symbol_info_tick('XAUUSD').ask,
             'tp' : TP,
             "magic": MAGIC,
             "comment": "Started Position",
@@ -43,16 +51,22 @@ def makingOrder(volume,orderType,checkData):
         print(result)
     else:
         if (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
-            SL = checkData['upperBand'][lastRow] + 0.0001
-            TP = SL - checkData['close'][lastRow]
-            TP = 1.5 * TP
-            TP = checkData['close'][lastRow] - TP
+            if(math.isnan(checkData['upperBand'][lastRow])):
+                SL = checkData['high'][prevRow] - 0.0005
+                TP = SL - checkData['close'][lastRow]
+                TP = 1.3 * TP
+                TP = checkData['close'][lastRow] - TP
+            else:
+                SL = checkData['upperBand'][lastRow] + 0.0005
+                TP = SL - checkData['close'][lastRow]
+                TP = 1.3 * TP
+                TP = checkData['close'][lastRow] - TP
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": 'EURUSD',
+            "symbol": 'XAUUSD',
             "volume": volume,
             "type": mt5.ORDER_TYPE_SELL,
-            "price": mt5.symbol_info_tick('EURUSD').bid,
+            "price": mt5.symbol_info_tick('XAUUSD').bid,
             'tp' : TP,
             "magic": MAGIC,
             "comment": "Started Position",

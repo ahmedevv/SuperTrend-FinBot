@@ -14,7 +14,7 @@ mt5.initialize(login=51054165,
    server="ICMarketsSC-Demo")
 
 #getting Real time Data from Metatrader5
-bars = mt5.copy_rates_range("EURUSD",mt5.TIMEFRAME_M15,datetime(2022,5,1),datetime.now())
+bars = mt5.copy_rates_range("XAUUSD",mt5.TIMEFRAME_M15,datetime(2022,11,1),datetime.now())
 
 #Converting data to DataFrame
 df = pd.DataFrame(bars)
@@ -70,6 +70,14 @@ def trueRange(df):
 
 
 #calculating PivotPoint
+def pivotPoint(df):
+    df['PP'] = (df['high']+df['low']+df['close'])/3
+    #S1= (P x 2) – Previous high
+    df['PLow'] = (df['PP'] * 2) - df['high']
+    #R1 = (P x 2) – Previous Low
+    df['PHigh'] = (df['PP']*2) - df['low']
+    return df
+
 
 
 
@@ -93,8 +101,11 @@ def getSuperTrend(df,period=10,multiplier=1.5):
     
     #populating ATR and making Bands
     df['atr'] = ATR(df,period=period)
-    df['upperBand'] = ((df['high'] + df['low'])/ 2) + (multiplier * df['atr'])
-    df['lowerBand'] = ((df['high'] + df['low'])/ 2) - (multiplier * df['atr'])
+    df = pivotPoint(df)
+    df['upperBand'] = (df['PHigh']) + (multiplier * df['atr'])
+    df['lowerBand'] = (df['PLow']) - (multiplier * df['atr'])
+    # df['upperBand'] = ((df['high'] + df['low'])/ 2) + (multiplier * df['atr'])
+    # df['lowerBand'] = ((df['high'] + df['low'])/ 2) - (multiplier * df['atr'])
     
     #Calculating and Populating EMA
     df['ema'] = trend.ema_indicator(df['close'],window=200)
