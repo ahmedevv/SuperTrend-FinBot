@@ -15,8 +15,8 @@ TIMEFRAME = mt5.TIMEFRAME_M15
 deviation = 20
 MAGIC = 999
 TICKET = 1612512523
-mt5.initialize(login=51054165,      
-   password="ywa8FtEY",      
+mt5.initialize(login=51061510,      
+   password="77NjWrZH",      
    server="ICMarketsSC-Demo")
 #Making Market Order
 def makingOrder(volume,orderType,checkData):
@@ -24,17 +24,14 @@ def makingOrder(volume,orderType,checkData):
     prevRow = lastRow - 1
    
     if orderType == 'Buy':
-        if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
-            if(math.isnan(checkData['lowerBand'][lastRow])):
-                SL = checkData['low'][prevRow] - 0.0005
-                TP = checkData['close'][lastRow] - SL 
-                TP = 1.3 * TP
-                TP = checkData['close'][lastRow] + TP
-            else:
-                SL = checkData['lowerBand'][lastRow] - 0.0005
-                TP = checkData['close'][lastRow] - SL 
-                TP = 1.3 * TP
-                TP = checkData['close'][lastRow] + TP
+        if (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
+            
+            SL = checkData['vwap'][lastRow] - 0.5
+            TP = checkData['close'][lastRow] - SL 
+            TP = 1.5 * TP
+            TP = checkData['close'][lastRow] + TP
+            print("Setting TP as: ",TP)
+            print("Setting SL: ",SL)
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": 'XAUUSD',
@@ -42,25 +39,24 @@ def makingOrder(volume,orderType,checkData):
             "type": mt5.ORDER_TYPE_BUY,
             "price": mt5.symbol_info_tick('XAUUSD').ask,
             'tp' : TP,
+            'sl' : SL,
             "magic": MAGIC,
             "comment": "Started Position",
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
+        print("Setting TP as: ", TP)
+        print("Setting SL as: ", SL)
         result = mt5.order_send(request)
         print(result)
     else:
-        if (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
-            if(math.isnan(checkData['upperBand'][lastRow])):
-                SL = checkData['high'][prevRow] - 0.0005
+        if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
+                SL = checkData['vwap'][lastRow] + 0.5
                 TP = SL - checkData['close'][lastRow]
-                TP = 1.3 * TP
+                TP = 1.5 * TP
                 TP = checkData['close'][lastRow] - TP
-            else:
-                SL = checkData['upperBand'][lastRow] + 0.0005
-                TP = SL - checkData['close'][lastRow]
-                TP = 1.3 * TP
-                TP = checkData['close'][lastRow] - TP
+                print("Setting TP as: ",TP)
+                print("Setting SL: ",SL)
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": 'XAUUSD',
@@ -68,11 +64,14 @@ def makingOrder(volume,orderType,checkData):
             "type": mt5.ORDER_TYPE_SELL,
             "price": mt5.symbol_info_tick('XAUUSD').bid,
             'tp' : TP,
+            'sl' : SL,
             "magic": MAGIC,
             "comment": "Started Position",
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
+        print("Setting TP as: ", TP)
+        print("Setting SL as: ", SL)
         result = mt5.order_send(request)
         print(result)
 
@@ -107,16 +106,15 @@ def trail_sl(checkData):
     price_current = position.price_current
     price_open = position.price_open
     sl = position.sl
-    print("Checking for Signal")
+    print("Trailing Stop-Loss")
     lastRow = len(checkData.index) - 1
     prevRow = lastRow - 1
-    print(checkData.tail(2))
     #for Buy/emaBuy
     if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
-        SL = checkData['lowerBand'][lastRow] - 0.0005
+        SL = checkData['vwap'][lastRow] - 0.5
         #setting SL above 5 pips of UpperBand for Sell Signal/emaSell
     elif (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
-        SL = checkData['upperBand'][lastRow] + 0.0005
+        SL = checkData['vwap'][lastRow] + 0.5
 
     request = {
             'action': mt5.TRADE_ACTION_SLTP,
@@ -137,7 +135,11 @@ def OpenedPosition():
 
 # def DailyDrawDown():
 #     info = mt5.account_info()
-#     print(info.balance)
+#     percent = 4/100
+#     iVal = info.equity
+#     print(iVal)
+
+# DailyDrawDown()
 
 # settingTradingLimit()
 

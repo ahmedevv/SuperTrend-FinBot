@@ -71,16 +71,21 @@ class Strategy:
     def settingSL(self,index,signalType):
         # Setting SL 5 pips below the Value of lowerBand for Buy Signal
         if signalType == 'Buy' or signalType == 'emaBuy':
-            SL = self.data['lowerBand'][index] - 0.0005
+            SL = self.data['vwap'][index] - 0.5
         #setting SL above 5 pips of UpperBand for Sell Signal
         elif signalType == 'Sell' or signalType == 'emaSell':
-            SL = self.data['upperBand'][index] + 0.0005
+            SL = self.data['vwap'][index] + 0.5
         return SL
     #setting Take profit
     def settingTP(self,index,signalType):
         
         #Setting TP on the Closing price of candle Where the Trend Changes from Buy to Sell or True to Flase
         if signalType == 'Buy' or signalType == 'emaBuy':
+            # SL = self.data['lowerBand'][index] - 0.5
+            # TP = self.data['close'][index] - SL 
+            # TP = 1.5 * TP
+            # TP = self.data['close'][index] + TP
+            # return TP
             for curr in range(index,len(self.data.index)):
                 if self.data['superTrend'][curr] == False:
                     TP = self.data['open'][curr]
@@ -92,6 +97,11 @@ class Strategy:
                     
             
         elif signalType == 'Sell' or signalType == 'emaSell':
+                # SL = self.data['upperBand'][index] + 0.5
+                # TP = SL - self.data['close'][index]
+                # TP = 1.5 * TP
+                # TP = self.data['close'][index] - TP
+                # return TP
             for curr in range(index,len(self.data.index)):
                 if self.data['superTrend'][curr] == True:
                     TP = self.data['open'][curr]
@@ -138,7 +148,7 @@ class Strategy:
 
 
 df = pd.read_csv('superTrendsignal.csv')
-superTrend_Strat = Strategy(df, 15000, 100000)
+superTrend_Strat = Strategy(df, 15000, 100)
 
 result = superTrend_Strat.run()
 TotalSum = result['profit'].sum()
