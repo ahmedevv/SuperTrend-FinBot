@@ -1,9 +1,9 @@
 import MetaTrader5 as mt5
 import pandas as pd
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
+#import plotly.express as px
+#mport plotly.graph_objects as go
+#import matplotlib.pyplot as plt
 import talib 
 import pandas_ta as pdta
 from ta import trend
@@ -176,17 +176,17 @@ def generateSignal(df):
     df['signal'] = 'NoPosition'
     for curr in range(199,len(df.index)):
         prev = curr - 1          
-        if df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == False and df['superTrend'][curr] == True and df['adx'][curr] >= 20   :
+        if df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == False and df['superTrend'][curr] == True and df['adx'][curr] >= 20 and df['adx'][prev] < 20  :
             df['signal'][curr] = 'Buy'
-        elif df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['close'][prev] < df['vwap'][prev] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= 20  :
+        elif df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= 20 and df['adx'][prev] < 20  :
             df['signal'][curr] = 'Buy'
-        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == False and  df['adx'][curr] >= 20 :
+        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == False and  df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
             df['signal'][curr] = 'Sell'
-        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['close'][prev] > df['vwap'][prev] and df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= 20 :
+        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr]  and df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
             df['signal'][curr] = 'Sell'
-        elif df['close'][prev] < df['ema'][prev] and df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= 20 :
+        elif df['close'][prev] < df['ema'][prev] and df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
             df['signal'][curr] = 'emaBuy'
-        elif df['close'][prev] > df['ema'][prev] and df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and  df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= 20 :
+        elif df['close'][prev] > df['ema'][prev] and df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
             df['signal'][curr]= 'emaSell'
         
     return df
