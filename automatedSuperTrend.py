@@ -28,13 +28,13 @@ def makingOrder(volume,orderType,checkData):
             
             SL = checkData['vwap'][lastRow] - 0.5
             TP = checkData['close'][lastRow] - SL 
-            if (TP < 5):
+            if (TP <= 5):
                 TP = 1.5 * TP
                 TP = checkData['close'][lastRow] + TP
             else:
                 TP = 0.5 * TP
                 TP = checkData['close'][lastRow] + TP
-                SL = checkData['vwap'][lastRow] + 5
+                SL = checkData['vwap'][lastRow] + 7
             print("Setting TP as: ",TP)
             print("Setting SL: ",SL)
         request = {
@@ -58,13 +58,13 @@ def makingOrder(volume,orderType,checkData):
         if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
                 SL = checkData['vwap'][lastRow] + 0.5
                 TP = SL - checkData['close'][lastRow]
-                if (TP < 5):
+                if (TP <= 5):
                     TP = 1.5 * TP
                     TP = checkData['close'][lastRow] - TP
                 else:
                     TP = 0.5 * TP
                     TP = checkData['close'][lastRow] - TP
-                    SL = checkData['vwap'][lastRow] - 5
+                    SL = checkData['vwap'][lastRow] - 7
                 print("Setting TP as: ",TP)
                 print("Setting SL: ",SL)
         request = {
@@ -104,7 +104,9 @@ def checkSignal(checkData):
 def trail_sl(checkData):
     # get position based on ticket_id
     position = mt5.positions_get()
-
+    info = mt5.account_info()
+    bal = info.balance
+    equ = info.equity
     # check if position exists
     if position:
         position = position[0]
@@ -116,30 +118,123 @@ def trail_sl(checkData):
     price_current = position.price_current
     price_open = position.price_open
     sl = position.sl
+    vol = position.volume
     print("Trailing Stop-Loss")
-    lastRow = len(checkData.index) - 1
-    prevRow = lastRow - 1
-    #for Buy/emaBuy
-    if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
-        SL = checkData['vwap'][lastRow] - 0.5
-        differ = price_open - SL
-        if(differ > 7):
-            SL = checkData['vwap'][lastRow] + 5
-        #setting SL above 5 pips of UpperBand for Sell Signal/emaSell
-    elif (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
-        SL = checkData['vwap'][lastRow] + 0.5
-        differ = SL - price_open
-        if(differ > 7):
-            SL = checkData['vwap'][lastRow] - 7
+    profit = bal - equ
+    profMult = vol * 100 * 2.5
+    #Checking if Trade is in Profit let's say it's lot size is 1 so 1*100*2.5=250$
+    #Profitvar gives us the value if we are in profit or not 
+    #Now if the balance is greater than 250$ it will change the SL to entry so we remain on safe side
+    if (profit >= profMult):
+        #for Buy
+        if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
+            if (price_open > checkData['vwap'][lastRow]):
+                request = {
+                        'action': mt5.TRADE_ACTION_SLTP,
+                        'position': position.ticket,
+                        'sl': price_open,
+                        'tp' : position.tp
+                    }
+                result = mt5.order_send(request)
+                print(result)
+            else:
+                 SL = checkData['vwap'][lastRow] - 0.5
+                 request = {
+                        'action': mt5.TRADE_ACTION_SLTP,
+                        'position': position.ticket,
+                        'sl': SL,
+                        'tp' : position.tp
+                    }
+                 result = mt5.order_send(request)
+                 print(result)
+        elif (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
+            if (price_open < checkData['vwap'][lastRow]):
+                request = {
+                        'action': mt5.TRADE_ACTION_SLTP,
+                        'position': position.ticket,
+                        'sl': price_open,
+                        'tp' : position.tp
+                    }
+                result = mt5.order_send(request)
+                print(result)
+            else:
+                 SL = checkData['vwap'][lastRow] + 0.5
+                 request = {
+                        'action': mt5.TRADE_ACTION_SLTP,
+                        'position': position.ticket,
+                        'sl': SL,
+                        'tp' : position.tp
+                    }
+                 result = mt5.order_send(request)
+                 print(result)
 
-    request = {
-            'action': mt5.TRADE_ACTION_SLTP,
-            'position': position.ticket,
-            'sl': SL,
-            'tp' : position.tp
-        }
-    result = mt5.order_send(request)
-    print(result)
+
+    
+    elif (bal < equ): #If Trade is not in profit
+        lastRow = len(checkData.index) - 1
+        prevRow = lastRow - 1
+        #for Buy/emaBuy
+        if (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == True) or (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == True):
+            SL = checkData['vwap'][lastRow] - 0.5
+            closediffer = checkData['close'][lastRow] - checkData['vwap'][lastRow]  
+            differ = price_open - SL
+            if(differ >= 5 and differ < 6):
+                SL = checkData['vwap'][lastRow] + 2
+            elif(differ >= 6 and differ < 7):
+                SL = checkData['vwap'][lastRow] + 3
+            elif (differ >= 7 and differ < 8):
+                SL = checkData['vwap'][lastRow] + 4
+            elif (differ >= 8 and differ < 7):
+                SL = checkData['vwap'][lastRow] + 5
+            elif (differ >= 9 and differ < 8):
+                SL = checkData['vwap'][lastRow] + 6
+            elif (differ >= 10 and differ < 9):
+                SL = checkData['vwap'][lastRow] + 7
+            elif (differ >= 11 and differ < 10):
+                SL = checkData['vwap'][lastRow] + 8
+            elif (differ >= 12 and differ < 11):
+                SL = checkData['vwap'][lastRow] + 9
+            elif (differ >= 13 and differ < 12):
+                SL = checkData['vwap'][lastRow] + 10
+            elif (differ >= 14):
+                SL = checkData['vwap'][lastRow] + 11  
+
+                    
+                
+            #setting SL above 5 pips of UpperBand for Sell Signal/emaSell
+        elif (checkData['superTrend'][lastRow] == True and checkData['superTrend'][prevRow] == False) or (checkData['superTrend'][lastRow] == False and checkData['superTrend'][prevRow] == False):
+            SL = checkData['vwap'][lastRow] + 0.5
+            differ = SL - price_open
+            
+            if(differ >= 5 and differ < 6):
+                SL = checkData['vwap'][lastRow] - 2
+            elif(differ >= 6 and differ < 7):
+                SL = checkData['vwap'][lastRow] - 3
+            elif (differ >= 7 and differ < 8):
+                SL = checkData['vwap'][lastRow] - 4
+            elif (differ >= 8 and differ < 7):
+                SL = checkData['vwap'][lastRow] - 5
+            elif (differ >= 9 and differ < 8):
+                SL = checkData['vwap'][lastRow] - 6
+            elif (differ >= 10 and differ < 9):
+                SL = checkData['vwap'][lastRow] - 7
+            elif (differ >= 11 and differ < 10):
+                SL = checkData['vwap'][lastRow] - 8
+            elif (differ >= 12 and differ < 11):
+                SL = checkData['vwap'][lastRow] - 9
+            elif (differ >= 13 and differ < 12):
+                SL = checkData['vwap'][lastRow] - 10
+            elif (differ >= 14):
+                SL = checkData['vwap'][lastRow] - 11
+
+        request = {
+                'action': mt5.TRADE_ACTION_SLTP,
+                'position': position.ticket,
+                'sl': SL,
+                'tp' : position.tp
+            }
+        result = mt5.order_send(request)
+        print(result)
 def OpenedPosition():
     position = mt5.positions_get()
     if position:
@@ -152,8 +247,9 @@ def OpenedPosition():
 # def DailyDrawDown():
 #     info = mt5.account_info()
 #     percent = 4/100
-#     iVal = info.equity
-#     print(iVal)
+#     eq = info.equity
+#     bal = info.balance
+#     print(eq,bal)
 
 # DailyDrawDown()
 
