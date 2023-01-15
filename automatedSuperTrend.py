@@ -105,6 +105,8 @@ def trail_sl(checkData):
     # get position based on ticket_id
     position = mt5.positions_get()
     info = mt5.account_info()
+    lastRow = len(checkData.index) - 1
+    prevRow = lastRow - 1
     bal = info.balance
     equ = info.equity
     # check if position exists
@@ -120,7 +122,7 @@ def trail_sl(checkData):
     sl = position.sl
     vol = position.volume
     print("Trailing Stop-Loss")
-    profit = bal - equ
+    profit = equ - bal
     profMult = vol * 100 * 2.5
     #Checking if Trade is in Profit let's say it's lot size is 1 so 1*100*2.5=250$
     #Profitvar gives us the value if we are in profit or not 
@@ -170,7 +172,7 @@ def trail_sl(checkData):
 
 
     
-    elif (bal < equ): #If Trade is not in profit
+    elif (equ < bal): #If Trade is not in profit
         lastRow = len(checkData.index) - 1
         prevRow = lastRow - 1
         #for Buy/emaBuy
