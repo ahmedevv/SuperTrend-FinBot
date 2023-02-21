@@ -71,10 +71,10 @@ class Strategy:
     def settingSL(self,index,signalType):
         # Setting SL 5 pips below the Value of lowerBand for Buy Signal
         if signalType == 'Buy' or signalType == 'emaBuy':
-            SL = self.data['vwap'][index] - 0.5
+            SL = self.data['lowerBand'][index] - 0.5
         #setting SL above 5 pips of UpperBand for Sell Signal
         elif signalType == 'Sell' or signalType == 'emaSell':
-            SL = self.data['vwap'][index] + 0.5
+            SL = self.data['upperBand'][index] + 0.5
         return SL
     #setting Take profit
     def settingTP(self,index,signalType):
@@ -148,22 +148,39 @@ class Strategy:
 
 
 df = pd.read_csv('superTrendsignal.csv')
-superTrend_Strat = Strategy(df, 15000, 100)
-
+superTrend_Strat = Strategy(df, 50000, 200)
+print("BackTesting Result on Pair XAU/USD")
 result = superTrend_Strat.run()
 TotalSum = result['profit'].sum()
-print("Total Profit: ",TotalSum)
+print("Total Cumulative Profit: ",TotalSum)
 maxLoss = result['profit'].min()
-print("Max Loss: ",maxLoss)
+print("Max Loss in one trade: ",maxLoss)
 maxProfit = result['profit'].max()
-print("Max Profit: ",maxProfit)
+print("Max Profit in one trade: ",maxProfit)
 result['profit'].values.flatten()
 totalLosses = sum(n < 0 for n in result['profit'].values.flatten())
 print("Total Losses = ", totalLosses)
 totalWins = sum(n > 0 for n in result['profit'].values.flatten())
 print("Total Wins = ", totalWins)
 print("Maximum Account value Reached: ", result['pnl'].max())
-print("Maximum Account Drawdown limit reached: ",result['pnl'].min())
+print("Minimum Account balance reached: ",result['pnl'].min())
+winpercent = (totalWins/(totalLosses+totalWins))*100
+print("Win Percentage : ", winpercent)
+drawdown = 0
+drawup = 0
+for curr in range(0,len(result.index)):
+    if result['profit'][curr] < 0:
+        drawdown = drawdown + abs(result['profit'][curr])
+    elif result['profit'][curr] > 0:
+        drawup = drawup + result['profit'][curr]
+print("Total Drawdown: ",drawdown)
+print("Total Gained Value : ",drawup)
+largestLow = 0
+for curr in range(0,len(result.index)):
+    if result['profit'][curr] < 0:
+        largestLow = largestLow + abs(result['profit'][curr])
+    elif result['profit'][curr] > 0:
+        largestLow = 0    
 
 result.to_csv('SuperTrendResult.csv')
 

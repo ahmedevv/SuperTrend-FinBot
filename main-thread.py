@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 import MetaTrader5 as mt5
 
-tradingTimeFrame =  15# set your trading time frame aka the time when new candle forms
+tradingTimeFrame = 15# set your trading time frame aka the time when new candle forms
 executedCode = False # an indication whether you have executed your code or not
 import automatedSuperTrend
 SYMBOL = 'XAUUSD'
@@ -26,12 +26,12 @@ while True: # your main thread
         if checker == False:
             if orderType == 'Buy':
                 print("Opening Buy Position")
-                automatedSuperTrend.makingOrder(1.0,'Buy',superTrend_data)
-                automatedSuperTrend.trail_sl(superTrend_data)
+                automatedSuperTrend.makingOrder(0.8,'Buy',superTrend_data)
+                
             elif orderType == 'Sell':
                 print("Opening Sell Position")
-                automatedSuperTrend.makingOrder(1.0,'Sell',superTrend_data)
-                automatedSuperTrend.trail_sl(superTrend_data)
+                automatedSuperTrend.makingOrder(0.8,'Sell',superTrend_data)
+                
             else:
                 print("No Signal Found!")
         elif checker == True:

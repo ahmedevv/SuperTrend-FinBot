@@ -1,9 +1,6 @@
 import MetaTrader5 as mt5
 import pandas as pd
 import numpy as np
-#import plotly.express as px
-#mport plotly.graph_objects as go
-#import matplotlib.pyplot as plt
 import talib 
 import pandas_ta as pdta
 from ta import trend
@@ -13,11 +10,11 @@ from datetime import datetime, timedelta
 import warnings 
 warnings.filterwarnings('ignore')
 
-mt5.initialize(login=51061510,      
-   password="77NjWrZH",      
+mt5.initialize(login=51075730,      
+   password="D4XVpyC2",      
    server="ICMarketsSC-Demo")
 #getting Real time Data from Metatrader5
-bars = mt5.copy_rates_range("XAUUSD",mt5.TIMEFRAME_M15,datetime(2022,10,22),datetime.now())
+bars = mt5.copy_rates_range("XAUUSD",mt5.TIMEFRAME_M15,datetime(2023,1,6),datetime.now())
 
 #Converting data to DataFrame
 df = pd.DataFrame(bars)
@@ -86,10 +83,7 @@ def pivotPoint(df):
 
 
 
-# def getADX(df):
-#     df['adx'] = trend.adx(df['high'],df['close'],df['low'],window=14)
-#     return df
-    
+
 
 
 
@@ -99,9 +93,6 @@ def ATR(df,period=10):
     df['TrueRange'] = trueRange(df)
     getAtr = df['TrueRange'].rolling(period).mean()
     return getAtr
-#Plotting Basic Bands 
-# fig = px.line(df,x='time',y=['close','upperBand','lowerBand'])
-# fig.show()
 
 def getSuperTrend(df,period=10,multiplier=1.5):
     
@@ -116,7 +107,7 @@ def getSuperTrend(df,period=10,multiplier=1.5):
     
     #Calculating and Populating EMA
     df['ema'] = trend.ema_indicator(df['close'],window=200)
-    df['adx'] = talib.ADX(df['high'],df['low'],df['close'],timeperiod=14)
+    df['adx'] = talib.ADX(df['high'],df['low'],df['close'],timeperiod=13)
     df.set_index('time',inplace = True)
     df['vwap'] = pdta.vwap(df['high'],df['low'],df['close'],df['tick_volume'],anchor='D')
     df.reset_index(inplace=True)
@@ -148,19 +139,6 @@ def getSuperTrend(df,period=10,multiplier=1.5):
 
 getSuperTrend(df)
 
-
-
-
-
-
-
-#plotting data and Saving into a Csv File.
-# def plottingData(df):
-#     plt.plot(df['close'], label='Close Price')
-#     plt.plot(df['lowerBand'], 'g', label = 'Final Lowerband')
-#     plt.plot(df['upperBand'], 'r', label = 'Final Upperband')
-#     plt.plot(df['ema'], 'black', label = 'ema')
-#     plt.show()
    
 
 
@@ -173,32 +151,36 @@ def generateSignal(df):
     #'emaSell'
     #5. No Buy Trade if Price is Below 200EMA and Buy signal pop then return '-1'
     #6. No Sell Trade if Price is Above 200EMA and Sell signal POPS. '-1'
+    adxval = 18
     df['signal'] = 'NoPosition'
     for curr in range(199,len(df.index)):
         prev = curr - 1          
-        if df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == False and df['superTrend'][curr] == True and df['adx'][curr] >= 20 and df['adx'][prev] < 20  :
+        if df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == False and df['superTrend'][curr] == True and df['adx'][curr] >= adxval and df['adx'][prev] < adxval  :
             df['signal'][curr] = 'Buy'
-        elif df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= 20 and df['adx'][prev] < 20  :
+        elif df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= adxval and df['adx'][prev] < adxval  :
             df['signal'][curr] = 'Buy'
-        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == False and  df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
+        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == False and  df['adx'][curr] >= adxval and df['adx'][prev] < adxval :
             df['signal'][curr] = 'Sell'
-        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr]  and df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
+        elif df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr]  and df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= adxval and df['adx'][prev] < adxval :
             df['signal'][curr] = 'Sell'
-        elif df['close'][prev] < df['ema'][prev] and df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
+        elif df['close'][prev] < df['ema'][prev] and df['close'][curr] > df['ema'][curr] and df['close'][curr] > df['vwap'][curr] and df['superTrend'][prev] == True and df['superTrend'][curr] == True and df['adx'][curr] >= adxval and df['adx'][prev] < adxval :
             df['signal'][curr] = 'emaBuy'
-        elif df['close'][prev] > df['ema'][prev] and df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= 20 and df['adx'][prev] < 20 :
+        elif df['close'][prev] > df['ema'][prev] and df['close'][curr] < df['ema'][curr] and df['close'][curr] < df['vwap'][curr] and df['superTrend'][prev] == False and df['superTrend'][curr] == False and df['adx'][curr] >= adxval and df['adx'][prev] < adxval :
             df['signal'][curr]= 'emaSell'
+        
         
     return df
 
-# df = generateSignal(df)
-# print(df)
-# df.to_csv('superTrendsignal.csv')
-# count = 0
-# for curr in range(199,len(df.index)):
-#     if df['signal'][curr] == 'Buy' or df['signal'][curr] == 'emaBuy' or df['signal'][curr] == 'Sell' or df['signal'][curr] == 'emaSell':
-#         count+=1
-# print('Total Positions: ', count)
+
+df = generateSignal(df)
+print(df)
+df.to_csv('superTrendsignal.csv')
+count = 0
+for curr in range(199,len(df.index)):
+    if df['signal'][curr] == 'Buy' or df['signal'][curr] == 'emaBuy' or df['signal'][curr] == 'Sell' or df['signal'][curr] == 'emaSell':
+        count+=1
+print('Total Positions: ', count)
+
 
 
 
